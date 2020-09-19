@@ -1,6 +1,19 @@
 #include "vector.h"
 #include <stdio.h>
 #include <assert.h>
+#include <string.h>
+
+
+int string_comparator(void* a, void*b){
+
+  return !strcmp(a, b);
+}
+
+int int_comparator(void* a, void* b){
+  int first = *((int*) a);
+  int second = *((int*) b);
+  return (a == b); 
+}
 
 void test_av_init(){
 
@@ -20,23 +33,21 @@ void test_av_append(){
   av_init(&test_vector);
 
   // testing
-  char* anton = "anton"; // "anton" is a string literal
-  // char* anna = "anna";
-  // char* sasha = "sasha";
-  // char* misha = "misha";
-  // char* alex = "alex";
+  char* anton_p = "anton"; // "anton" is a string literal
+  
   int old_bufize = test_vector.buffer_size;
-  for(int i = 0 ; i < test_vector.buffer_size + 1; i++){
-    av_append(anton);
+  void** old_buffer_p = test_vector.buffer_p;
+  for(int i = 0 ; i < old_bufize + 1; i++){
+    av_append(&test_vector, anton_p); // infinite loop (replace buffer.zise with old_bufsize)
+    assert(anton_p == test_vector.buffer_p[i] && "the element is not in the address vector");
+    assert(test_vector.size == (i + 1) && "buffer size not updated");
   }
-  assert(old_bufize < test_vector.buffer_size && "buffer siz")
+  assert(old_bufize < test_vector.buffer_size && "buffer size not increased after resizing");
+  assert(old_buffer_p != test_vector.buffer_p && "buffer address not changed");
+  
 
-  // av_append(&my_av, anton);
-  // av_append(&my_av, anna);
-  // av_append(&my_av, sasha);
-  // av_append(&my_av, misha);
-  // av_append(&my_av, alex);
-
+  //we also want to make sure we have correctly reallocated our buffer_p 
+  //by checking the adress of the old and new one, so that they do not much
 
 }
 

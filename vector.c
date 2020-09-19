@@ -32,3 +32,16 @@ void av_append(struct address_vector* av_p, void* address){
   av_p->buffer_p[av_p->size] = address;
   av_p->size++;
 }
+
+void* av_search(struct address_vector* av_p, void* target_p, int (*comp)(void*,void*)){
+
+  for (int i = 0; i < av_p->size; i++){
+    
+    if ((*comp)(av_p->buffer_p[i], target_p)) 
+      // If value to which av_p->buffer_p[i] points to "equals" to value target
+      return av_p->buffer_p[i];
+
+  }
+
+  return NULL;
+}

@@ -12,6 +12,7 @@ void av_init(struct address_vector* av_p){
   return;
 }
 
+
 void av_append(struct address_vector* av_p, void* address){
 
   if(av_p->size == av_p->buffer_size){
@@ -31,6 +32,11 @@ void av_append(struct address_vector* av_p, void* address){
 
   av_p->buffer_p[av_p->size] = address;
   av_p->size++;
+}
+
+int string_comparator(void* a, void*b){
+
+  return !strcmp(a, b);
 }
 
 void* av_search(struct address_vector* av_p, void* target_p, int (*comp)(void*,void*)){

@@ -1,14 +1,26 @@
 #include "vector.h"
 #include "graph_node.h"
+#include "pair.h"
 #include <stdio.h>
 #include <assert.h>
 #include <string.h>
+#include <stdlib.h>
+
+void find_path(char * name_1, char * name_2, struct graph_node* graph, int size){
 
 
-int string_comparator(void* a, void*b){
-
-  return !strcmp(a, b);
 }
+
+
+struct graph_node* find_node_by_name(struct graph_node* g, char* name, int size){
+    for(int i = 0; i < size; i++){
+      if(strcmp(g[i].node_id, name) != 0){
+        return &g[i];
+      } 
+    }
+    return NULL;
+}
+
 
 int int_comparator(void* a, void* b){
   int first = *((int*) a); // gives me the value pointed to by a, &gives me the address of the value pointed by a
@@ -76,12 +88,47 @@ void test_av_append(){
 // the point of this function is to makes sure that our function does what it is supposed to do
 
 int main(int argc, char** argv) {
-
+  
   char* program_name = argv[0];
 
+  struct address_vector input_pairs;
+  av_init(&input_pairs);
+  FILE* fp = fopen("file.txt", "r");
+
+  // we read a file// 
+  file_to_vector_pairs(fp, &input_pairs);
+  fclose(fp);
+  
+  struct address_vector unique_names;
+  av_init(&unique_names);
+  // we then want to go through each pair and collect unique values //
+  find_unique_names(&input_pairs, &unique_names);
+
+  // for each unique value we create a node // 
+  struct graph_node* graph = malloc(sizeof(struct graph_node) * unique_names.size);
+  for(int i = 0; i < unique_names.size; i++){
+    char* name = unique_names.buffer_p[i];
+    gn_init(&graph[i], name);
+  }
+  // you use a -> with a pointer
+  // we then go back to our vector with each pair, take both names, and append them to their neighbors//
+  for(int i = 0; i < input_pairs.size; i++){
+    struct pair* curr_pair = input_pairs.buffer_p[i];
+    char* name_1 = curr_pair->name_1;
+    char* name_2 = curr_pair->name_2;
+    struct graph_node* n1 = find_node_by_name(graph, name_1, unique_names.size);
+    struct graph_node* n2 = find_node_by_name(graph, name_2, unique_names.size);
+    // find the node of my name, looking for it in my graph |^
+    gn_add_neighbor(n1, n2);
+    gn_add_neighbor(n2, n1);
+  }
+
+  // we read user input, and call BFS search to find the path from one person to another
+  //getline() 
+  
+  /*
   struct address_vector my_av;
 
-  // Call the init function to allocated memory, set the size and other arguments
   av_init(&my_av);
 
   printf("Testing av_init ... ");
@@ -94,6 +141,8 @@ int main(int argc, char** argv) {
 
   struct graph_node gn_temp;
   gn_init(&gn_temp, "alex");
+  */
+ 
 
   return 0;
 }

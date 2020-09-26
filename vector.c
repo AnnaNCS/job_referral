@@ -12,6 +12,27 @@ void av_init(struct address_vector* av_p){
   return;
 }
 
+struct address_vector* av_create(){
+  struct address_vector* av_p = malloc(sizeof(struct address_vector));
+  av_init(av_p);
+  return av_p;
+} 
+
+void av_delete(struct address_vector* av_p){
+  free(av_p->buffer_p);
+  free(av_p);
+}
+
+struct address_vector* av_copy(struct address_vector* to_copy){
+  struct address_vector* new_av =  av_create();
+  // bug, the to_copy might be greater than the av_create, cannot use memcpy
+  // memcpy(new_av->buffer_p, to_copy->buffer_p, to_copy->)
+  for(int i = 0; i < to_copy->size; i++){
+    av_append(new_av, to_copy->buffer_p[i]);
+  }
+  return new_av;
+}
+
 void av_pop(struct address_vector* av_p){
 
   void** buffer_new = (void**) malloc(sizeof(void*) * av_p->buffer_size);

@@ -12,6 +12,10 @@ struct address_vector {
 
 void av_init(struct address_vector* av);
 
+struct address_vector* av_create();
+void av_delete(struct address_vector* av_p);
+struct address_vector* av_copy(struct address_vector* to_copy);
+
 // Append new element to end of vector
 void av_append(struct address_vector* av_p, void* address);
 

@@ -6,12 +6,6 @@
 #include <string.h>
 #include <stdlib.h>
 
-void find_path(char * name_1, char * name_2, struct graph_node* graph, int size){
-
-
-}
-
-
 struct graph_node* find_node_by_name(struct graph_node* g, char* name, int size){
     for(int i = 0; i < size; i++){
       if(strcmp(g[i].node_id, name) != 0){
@@ -21,6 +15,51 @@ struct graph_node* find_node_by_name(struct graph_node* g, char* name, int size)
     return NULL;
 }
 
+void find_path(char* name_1, char* name_2, struct graph_node* graph, int size){
+
+  struct address_vector visited;
+  struct address_vector queue;
+  av_init(&visited); // DO WE want to empty, set to null the ad_v ? 
+  av_init(&queue);
+
+  // first we want to find the node that we are going to start from 
+  struct graph_node* node_start = find_node_by_name(graph, name_1, size);
+  // the same comes to the node we want to finish our search with 
+  struct graph_node* node_end = find_node_by_name(graph, name_2, size);
+  // next, we want to enqueue our first node 
+  av_append(&queue, node_start);
+
+  // we keep 
+  struct graph_node* curr_node; 
+  curr_node = node_start;
+  
+  while(queue.buffer_p[0] != NULL){
+    
+    curr_node = queue.buffer_p[0];
+    fprintf(stderr, "visiting node id %s\n", curr_node->node_id);
+    if (curr_node == node_end){
+      printf("The pathway to your target is completed\n");
+      return;
+    }
+
+    av_append(&visited, curr_node);
+    fprintf(stderr, "appending node id %s\n", curr_node->node_id);
+
+    av_pop(&queue); 
+    fprintf(stderr, "popped node id %s\n", curr_node->node_id);
+
+    for(int i = 0; i < curr_node->neighbors.size; i++){
+      struct graph_node* neighbor = curr_node->neighbors.buffer_p[i];
+      if(av_search(&visited, neighbor, gn_comparator) == NULL){
+        
+        av_append(&queue, neighbor);
+      }
+    
+    }
+
+  }
+
+}
 
 int int_comparator(void* a, void* b){
   int first = *((int*) a); // gives me the value pointed to by a, &gives me the address of the value pointed by a
@@ -28,9 +67,6 @@ int int_comparator(void* a, void* b){
   return (first == second); 
 }
 
-void test_gn_init(){
-  //TODO: write test 
-}
 
 void test_av_init(){
 
@@ -87,16 +123,38 @@ void test_av_append(){
 
 // the point of this function is to makes sure that our function does what it is supposed to do
 
+/*
+void test_create_pair(){
+
+}
+
+void test_gn_init(){
+
+}
+
+void test_find_node_by_name(){
+
+}
+
+void test_gn_add_neighbor(){
+
+}
+*/
+
+
 int main(int argc, char** argv) {
   
   char* program_name = argv[0];
 
   struct address_vector input_pairs;
   av_init(&input_pairs);
+
   FILE* fp = fopen("file.txt", "r");
+  FILE* debug = fopen("debug.txt", "w+");
 
   // we read a file// 
   file_to_vector_pairs(fp, &input_pairs);
+
   fclose(fp);
   
   struct address_vector unique_names;
@@ -104,12 +162,15 @@ int main(int argc, char** argv) {
   // we then want to go through each pair and collect unique values //
   find_unique_names(&input_pairs, &unique_names);
 
+  // make a change here, so that tour graph is a address vector 
   // for each unique value we create a node // 
   struct graph_node* graph = malloc(sizeof(struct graph_node) * unique_names.size);
   for(int i = 0; i < unique_names.size; i++){
     char* name = unique_names.buffer_p[i];
     gn_init(&graph[i], name);
   }
+ 
+
   // you use a -> with a pointer
   // we then go back to our vector with each pair, take both names, and append them to their neighbors//
   for(int i = 0; i < input_pairs.size; i++){
@@ -124,25 +185,18 @@ int main(int argc, char** argv) {
   }
 
   // we read user input, and call BFS search to find the path from one person to another
-  //getline() 
-  
-  /*
-  struct address_vector my_av;
+  char* line = NULL;
+  size_t n = 0;
+  const char* delimmeter = ",";
+  char* input_1 = NULL;
+  char* input_2 = NULL;
+  getline(&line, &n, stdin);
+  input_1 = strtok(line, delimmeter);
+  input_2 = strtok(NULL, delimmeter);
 
-  av_init(&my_av);
+  printf("Your input names were: %s and %s", input_1, input_2);
+  find_path(input_1, input_2, graph, unique_names.size);
 
-  printf("Testing av_init ... ");
-  test_av_init();
-  printf("PASS\n");
-
-  printf("Testing av_append ... "); 
-  test_av_append();
-  printf("PASS\n");
-
-  struct graph_node gn_temp;
-  gn_init(&gn_temp, "alex");
-  */
- 
-
+  fclose(debug);
   return 0;
 }

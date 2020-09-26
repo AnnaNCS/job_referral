@@ -6,12 +6,20 @@
 void av_init(struct address_vector* av_p){
 
   av_p->size = 0;
-  av_p->buffer_size = 4;
+  av_p->buffer_size = 5;
   av_p->buffer_p = (void**) malloc(sizeof(void*) * av_p->buffer_size);
   
   return;
 }
 
+void av_pop(struct address_vector* av_p){
+
+  void** buffer_new = (void**) malloc(sizeof(void*) * av_p->buffer_size);
+  memcpy(buffer_new, av_p->buffer_p + 1, (av_p->buffer_size -1) * sizeof(void*));
+  free(av_p->buffer_p);
+  av_p->buffer_p = buffer_new;
+  av_p->size--;
+} 
 
 void av_append(struct address_vector* av_p, void* address){
 
@@ -21,7 +29,7 @@ void av_append(struct address_vector* av_p, void* address){
     void** buffer_new = (void**) malloc(sizeof(void*) * 2 * av_p->buffer_size);
     // STEP 2:
     // call memcpy() to copy the memory, from the old one to the new one, delete previous old buffer 
-    memcpy(buffer_new, av_p->buffer_p, av_p->buffer_size);
+    memcpy(buffer_new, av_p->buffer_p, av_p->buffer_size * sizeof(void*));
     free(av_p->buffer_p);
     av_p->buffer_p = buffer_new;
     // STEP 3: 

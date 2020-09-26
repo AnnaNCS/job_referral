@@ -47,12 +47,15 @@ void file_to_vector_pairs(FILE *fp, struct address_vector* my_pairs){
 void find_unique_names(struct address_vector* input_pairs, struct address_vector* unique_names){
     for(int i = 0; i < input_pairs->size; i++){
         struct pair* curr_pair = input_pairs->buffer_p[i];
-        if(av_search(unique_names, curr_pair->name_1, string_comparator) == NULL){
+        char* temp = av_search(unique_names, curr_pair->name_1, string_comparator);
+        if(temp == NULL){
             av_append(unique_names, curr_pair->name_1);
+
         }
         if(av_search(unique_names, curr_pair->name_2, string_comparator) == NULL){
             av_append(unique_names, curr_pair->name_2);
         }
     }
+    
 
 }

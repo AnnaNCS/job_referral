@@ -16,7 +16,7 @@ void av_init(struct address_vector* av);
 void av_append(struct address_vector* av_p, void* address);
 
 // Removes an element from the end of the vector
-void* av_pop(struct address_vector* av_p);
+void av_pop(struct address_vector* av_p);
 
 // optional // Get the element at index. Make sure to check for invalid index.
 void* av_get_at(struct address_vector* av_p, int index);

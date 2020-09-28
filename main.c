@@ -7,6 +7,7 @@
 #include <stdlib.h>
 
 struct graph_node* find_node_by_name(struct graph_node* g, char* name, int size){
+
     for(int i = 0; i < size; i++){
       //printf("%d\n", i);
       if(strcmp(g[i].node_id, name) == 0){
@@ -14,16 +15,15 @@ struct graph_node* find_node_by_name(struct graph_node* g, char* name, int size)
         return &g[i];
       } 
     }
+    //printf("Not found\n");
     return NULL;
 }
 
 struct address_vector* find_path(char* name_1, char* name_2, struct graph_node* graph, int size){
 
-  fprintf(stderr, "nperforming path search %d\n", size);
+  //fprintf(stderr, "nperforming path search %d\n", size);
 
   struct address_vector* final_path = NULL;
-  struct address_vector* visited = av_create();
-  struct address_vector* queue = av_create();
 
   // first we want to find the node that we are going to start from 
   struct graph_node* node_start = find_node_by_name(graph, name_1, size);
@@ -31,10 +31,15 @@ struct address_vector* find_path(char* name_1, char* name_2, struct graph_node* 
   // the same comes to the node we want to finish our search with 
   struct graph_node* node_end = find_node_by_name(graph, name_2, size);
 
-  fprintf(stderr, "node ID  start %s ; end %s\n", node_start->node_id, node_end->node_id);
   if(node_start == NULL || node_end == NULL){
     return final_path;
   }
+
+  struct address_vector* visited = av_create();
+  struct address_vector* queue = av_create();
+
+  fprintf(stderr, "node ID  start %s ; end %s\n", node_start->node_id, node_end->node_id);
+
   // next, we want to enqueue our first node 
   struct address_vector* path = av_create();
 
@@ -47,6 +52,7 @@ struct address_vector* find_path(char* name_1, char* name_2, struct graph_node* 
   while(queue->size != 0){
     
     path = queue->buffer_p[0];
+    av_pop(queue);
 
     curr_node = path->buffer_p[path->size - 1];
     fprintf(stderr, "visiting node id %s\n", curr_node->node_id);
@@ -57,10 +63,6 @@ struct address_vector* find_path(char* name_1, char* name_2, struct graph_node* 
     }
 
     av_append(visited, curr_node);
-    fprintf(stderr, "appending node id %s\n", curr_node->node_id);
-
-    av_pop(queue); 
-    fprintf(stderr, "popped node id %s\n", curr_node->node_id);
 
     for(int i = 0; i < curr_node->neighbors.size; i++){
       struct graph_node* neighbor = curr_node->neighbors.buffer_p[i];
@@ -88,9 +90,81 @@ struct address_vector* find_path(char* name_1, char* name_2, struct graph_node* 
 }
 
 int int_comparator(void* a, void* b){
+
   int first = *((int*) a); // gives me the value pointed to by a, &gives me the address of the value pointed by a
   int second = *((int*) b);
   return (first == second); 
+}
+
+void append_neighbors_to_names(struct address_vector input_pairs, struct address_vector unique_names, struct graph_node* graph){
+
+  for(int i = 0; i < input_pairs.size; i++){
+    struct pair* curr_pair = input_pairs.buffer_p[i];
+    char* name_1 = curr_pair->name_1;
+    char* name_2 = curr_pair->name_2;
+    
+    struct graph_node* n1 = find_node_by_name(graph, name_1, unique_names.size);
+    struct graph_node* n2 = find_node_by_name(graph, name_2, unique_names.size);
+    // find the node of my name, looking for it in my graph |^
+    gn_add_neighbor(n1, n2);
+    gn_add_neighbor(n2, n1);
+  }
+
+}
+
+void read_user_input(struct graph_node* graph, struct address_vector unique_names){
+  
+  char* line = NULL;
+  char* input_1 = NULL;
+  char* input_2 = NULL;
+  char* quit = "quit";
+    
+  fprintf(stdout, "Input two names:\n");
+  fprintf(stdout, ">");
+  size_t n = 0;
+  const char* delimmeter = ",";
+  int read = getline(&line, &n, stdin);
+
+  line[read-1] = 0; // NOTE: must remove new line character
+  input_1 = strtok(line, delimmeter);
+  input_2 = strtok(NULL, delimmeter);
+
+  if(strcmp(input_1, quit) == 0){
+    fprintf(stdout, "Thank you, the program will terminate now.\n");
+    return;
+  }
+
+  fprintf(stdout, "Your input names were: %s and %s\n", input_1, input_2);
+
+  if(input_2 == NULL || input_1 == NULL){
+    fprintf(stdout, "Your input was not complete, try again:\n");
+    read_user_input(graph, unique_names);
+  }
+
+  if(input_1 == input_2){
+    fprintf(stdout, "Your input names are the same, try again:\n");
+    read_user_input(graph, unique_names);
+  }
+    
+  struct address_vector* final_path = find_path(input_1, input_2, graph, unique_names.size);
+
+  // you are unable to take a size of a null pointer, you can not dereference it
+  
+  if(final_path == NULL){
+    printf("The pathway does not exist, try again:\n");
+    read_user_input(graph, unique_names);
+  }else{
+    for (int i = 0; i < final_path->size; i++){
+      struct graph_node* node = final_path->buffer_p[i];
+      char* name = node->node_id;
+      printf(" -> %s", name);
+    }
+    printf("\n");
+    
+  }
+  av_delete(final_path);
+  read_user_input(graph, unique_names);
+  
 }
 
 
@@ -120,8 +194,6 @@ void test_av_search(){
   //assert() we want to compare the return pointer from the research funciton to the pointer of our target
   //the pointers themselves 
 }
-// do the same thing with an int_comparator
-
 
 void test_av_append(){
 
@@ -140,33 +212,10 @@ void test_av_append(){
   }
   assert(old_bufize < test_vector.buffer_size && "buffer size not increased after resizing");
   assert(old_buffer_p != test_vector.buffer_p && "buffer address not changed");
-  
 
   //we also want to make sure we have correctly reallocated our buffer_p 
   //by checking the adress of the old and new one, so that they do not much
-
 }
-
-// the point of this function is to makes sure that our function does what it is supposed to do
-
-/*
-void test_create_pair(){
-
-}
-
-void test_gn_init(){
-
-}
-
-void test_find_node_by_name(){
-
-}
-
-void test_gn_add_neighbor(){
-
-}
-*/
-
 
 int main(int argc, char** argv) {
   
@@ -176,7 +225,6 @@ int main(int argc, char** argv) {
   av_init(&input_pairs);
 
   FILE* fp = fopen("file.txt", "r");
-  FILE* debug = fopen("debug.txt", "w+");
 
   // we read a file// 
   file_to_vector_pairs(fp, &input_pairs);
@@ -188,55 +236,21 @@ int main(int argc, char** argv) {
   // we then want to go through each pair and collect unique values //
   find_unique_names(&input_pairs, &unique_names);
   
-
-  // make a change here, so that tour graph is a address vector 
+  // make a change here, so that our graph is a address vector 
   // for each unique value we create a node // 
   struct graph_node* graph = malloc(sizeof(struct graph_node) * unique_names.size);
   for(int i = 0; i < unique_names.size; i++){
     char* name = unique_names.buffer_p[i];
-    printf("unique name %s\n", name);
+    //printf("unique name %s\n", name);
     gn_init(&graph[i], name);
   }
-  
 
   // you use a -> with a pointer
   // we then go back to our vector with each pair, take both names, and append them to their neighbors//
-  for(int i = 0; i < input_pairs.size; i++){
-    struct pair* curr_pair = input_pairs.buffer_p[i];
-    char* name_1 = curr_pair->name_1;
-    char* name_2 = curr_pair->name_2;
-    
-    struct graph_node* n1 = find_node_by_name(graph, name_1, unique_names.size);
-    struct graph_node* n2 = find_node_by_name(graph, name_2, unique_names.size);
-    // find the node of my name, looking for it in my graph |^
-    gn_add_neighbor(n1, n2);
-    gn_add_neighbor(n2, n1);
-  }
+  append_neighbors_to_names(input_pairs, unique_names, graph);
 
   // we read user input, and call BFS search to find the path from one person to another
-  char* line = NULL;
-  size_t n = 0;
-  const char* delimmeter = ",";
-  char* input_1 = NULL;
-  char* input_2 = NULL;
-  getline(&line, &n, stdin);
-  input_1 = strtok(line, delimmeter);
-  input_2 = strtok(NULL, delimmeter);
+  read_user_input(graph, unique_names);
 
-  printf("Your input names were: %s and %s", input_1, input_2);
-  struct address_vector* final_path = find_path(input_1, input_2, graph, unique_names.size);
-
-  // you are unable to take a size of a null pointer, you can not dereference it
-  if(final_path == NULL){
-    printf("The pathway does not exist\n");
-  }else {
-    for (int i = 0; i < final_path->size; i++){
-      struct graph_node* node = final_path->buffer_p[i];
-      char* name = node->node_id;
-      printf("%s -> ", name);
-      
-    }
-    printf("\n");
-  }
   return 0;
 }

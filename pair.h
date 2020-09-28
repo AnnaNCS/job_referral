@@ -3,11 +3,11 @@
 #include "vector.h"
 #include <stdio.h>
 
-
-
 struct pair {
+
     char* name_1;
     char* name_2;
+    
 };
 
 void file_to_vector_pairs(FILE* fp, struct address_vector* my_pairs);

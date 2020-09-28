@@ -4,16 +4,20 @@
 //ADRESS VECTOR IS OUR CONTAINER 
 
 struct address_vector {
+
   int size; // how many elements in the vector are currently
   int buffer_size; // how mcuh memory there is
   void** buffer_p; // allocated memory
+
 };
 
 
 void av_init(struct address_vector* av);
 
 struct address_vector* av_create();
+
 void av_delete(struct address_vector* av_p);
+
 struct address_vector* av_copy(struct address_vector* to_copy);
 
 // Append new element to end of vector

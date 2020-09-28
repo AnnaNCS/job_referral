@@ -4,6 +4,7 @@
 #include <stdlib.h>
 
 int gn_comparator(void* a, void* b){
+
     struct graph_node* gn_1_temp = a;
     struct graph_node* gn_2_temp = b;
     if(strcmp(gn_1_temp->node_id, gn_2_temp->node_id)){
@@ -12,7 +13,6 @@ int gn_comparator(void* a, void* b){
         return 1;
     }
     //char* is also a string
-
 }
 
 void gn_init(struct graph_node* gn_p, char* node_id){
@@ -27,7 +27,6 @@ void gn_init(struct graph_node* gn_p, char* node_id){
 void gn_add_neighbor(struct graph_node* gn_p, struct graph_node* neighbor){
 
     //first we need to check if the neighboor already is in the av neighbors 
-
     struct graph_node* neighbor_temp = av_search(&gn_p->neighbors, neighbor, gn_comparator);
     if (neighbor_temp == NULL){
         av_append(&gn_p->neighbors, neighbor);

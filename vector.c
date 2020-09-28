@@ -13,17 +13,20 @@ void av_init(struct address_vector* av_p){
 }
 
 struct address_vector* av_create(){
+
   struct address_vector* av_p = malloc(sizeof(struct address_vector));
   av_init(av_p);
   return av_p;
 } 
 
 void av_delete(struct address_vector* av_p){
+
   free(av_p->buffer_p);
   free(av_p);
 }
 
 struct address_vector* av_copy(struct address_vector* to_copy){
+
   struct address_vector* new_av =  av_create();
   // bug, the to_copy might be greater than the av_create, cannot use memcpy
   // memcpy(new_av->buffer_p, to_copy->buffer_p, to_copy->)
@@ -56,16 +59,15 @@ void av_append(struct address_vector* av_p, void* address){
     // STEP 3: 
     // reassign the buffer_size to the size of the new buffer 
     av_p->buffer_size = 2 * av_p->buffer_size;
-
   }
 
   av_p->buffer_p[av_p->size] = address;
   av_p->size++;
 }
 
-int string_comparator(void* a, void*b){
+int string_comparator(void* a, void* b){
 
-  return !strcmp(a, b);
+  return !strcmp((char*) a, (char*) b);
 }
 
 void* av_search(struct address_vector* av_p, void* target_p, int (*comp)(void*,void*)){
@@ -77,6 +79,5 @@ void* av_search(struct address_vector* av_p, void* target_p, int (*comp)(void*,v
       return av_p->buffer_p[i];
 
   }
-
   return NULL;
 }

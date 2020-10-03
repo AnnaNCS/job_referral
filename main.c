@@ -38,7 +38,7 @@ struct address_vector* find_path(char* name_1, char* name_2, struct graph_node* 
   struct address_vector* visited = av_create();
   struct address_vector* queue = av_create();
 
-  fprintf(stderr, "node ID  start %s ; end %s\n", node_start->node_id, node_end->node_id);
+  //fprintf(stderr, "node ID  start %s ; end %s\n", node_start->node_id, node_end->node_id);
 
   // next, we want to enqueue our first node 
   struct address_vector* path = av_create();
@@ -55,10 +55,10 @@ struct address_vector* find_path(char* name_1, char* name_2, struct graph_node* 
     av_pop(queue);
 
     curr_node = path->buffer_p[path->size - 1];
-    fprintf(stderr, "visiting node id %s\n", curr_node->node_id);
+    //fprintf(stderr, "visiting node id %s\n", curr_node->node_id);
     if (curr_node == node_end){
       final_path = path;
-      printf("The pathway to your target is completed\n");
+      //printf("The pathway to your target is completed\n");
       break;
     }
 
@@ -114,57 +114,70 @@ void append_neighbors_to_names(struct address_vector input_pairs, struct address
 
 void read_user_input(struct graph_node* graph, struct address_vector unique_names){
   
+
   char* line = NULL;
   char* input_1 = NULL;
   char* input_2 = NULL;
   char* quit = "quit";
     
   fprintf(stdout, "Input two names:\n");
-  fprintf(stdout, ">");
   size_t n = 0;
   const char* delimmeter = ",";
-  int read = getline(&line, &n, stdin);
 
-  line[read-1] = 0; // NOTE: must remove new line character
-  input_1 = strtok(line, delimmeter);
-  input_2 = strtok(NULL, delimmeter);
-
-  if(strcmp(input_1, quit) == 0){
-    fprintf(stdout, "Thank you, the program will terminate now.\n");
-    return;
-  }
-
-  fprintf(stdout, "Your input names were: %s and %s\n", input_1, input_2);
-
-  if(input_2 == NULL || input_1 == NULL){
-    fprintf(stdout, "Your input was not complete, try again:\n");
-    read_user_input(graph, unique_names);
-  }
-
-  if(input_1 == input_2){
-    fprintf(stdout, "Your input names are the same, try again:\n");
-    read_user_input(graph, unique_names);
-  }
-    
-  struct address_vector* final_path = find_path(input_1, input_2, graph, unique_names.size);
-
-  // you are unable to take a size of a null pointer, you can not dereference it
+  int read;
   
-  if(final_path == NULL){
-    printf("The pathway does not exist, try again:\n");
-    read_user_input(graph, unique_names);
-  }else{
-    for (int i = 0; i < final_path->size; i++){
-      struct graph_node* node = final_path->buffer_p[i];
-      char* name = node->node_id;
-      printf(" -> %s", name);
+  while(1){
+    
+    fprintf(stdout, ">");
+
+    read = getline(&line, &n, stdin);
+
+    line[read-1] = 0; // NOTE: must remove new line character
+    input_1 = strtok(line, delimmeter);
+    input_2 = strtok(NULL, delimmeter);
+
+    
+
+    if(input_1 == NULL){
+      fprintf(stdout, "Your input was not complete, try again:\n");
+      continue;
     }
-    printf("\n");
+
+    if(input_1 == input_2){
+      fprintf(stdout, "Your input names are the same, try again:\n");
+      continue;
+    }
+
+    if(strcmp(input_1, quit) == 0){
+      fprintf(stdout, "Thank you, the program will terminate now.\n");
+      return;
+    }
+
+    if(input_2 == NULL){
+      fprintf(stdout, "Your input was not complete, try again:\n");
+      continue;
+    }
+
+    fprintf(stdout, "Your input names were: %s and %s\n", input_1, input_2);
+      
+    struct address_vector* final_path = find_path(input_1, input_2, graph, unique_names.size);
+
+    // you are unable to take a size of a null pointer, you can not dereference it
     
+    if(final_path == NULL){
+      printf("The pathway does not exist, try again:\n");
+      continue;
+    }else{
+      for (int i = 0; i < final_path->size; i++){
+        struct graph_node* node = final_path->buffer_p[i];
+        char* name = node->node_id;
+        printf(" -> %s", name);
+      }
+      printf("\n");
+      
+    }
+    av_delete(final_path); // if final path is null and try delete = crash
   }
-  av_delete(final_path);
-  read_user_input(graph, unique_names);
-  
 }
 
 
@@ -219,8 +232,6 @@ void test_av_append(){
 
 int main(int argc, char** argv) {
   
-  char* program_name = argv[0];
-
   struct address_vector input_pairs;
   av_init(&input_pairs);
 

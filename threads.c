@@ -43,62 +43,62 @@ void* search_thread_main(void* t_args){
         av_append(&out_box->av,final_path);
         // 3.3 Release the lock
         pthread_mutex_unlock(&out_box->lock);
-        // Step 4: Mystery step to keep the program from bleeding memory
 
-        if(final_path == NULL){
-            printf("The pathway does not exist, try again:\n");
-            continue;
-        }else{
-            for (int i = 0; i < final_path->size; i++){
-                struct graph_node* node = final_path->buffer_p[i];
-                char* name = node->node_id;
-                printf(" -> %s", name);
-            }
-            printf("\n");
-            
-        }
         delete_pair(input_pair);
     }
 
-    fprintf(stderr, "Search thread quitting");
+    fprintf(stderr, "Search thread quitting\n");
     return NULL;
 }
 
 
 void* output_thread_main(void* t_args){
-    // struct OutputThreadArgs* args = (struct OutputThreadArg*) t_args;
-    // struct Box* out_box = args->out_box;
-    // char* file_name = args->file_name;
+    struct OutputThreadArgs* args = (struct OutputThreadArgs*) t_args;
+    struct Box* out_box = args->out_box;
+    char* file_name = args->file_name;
+    bool* quit_pressed = args->quit_pressed;
 
-    // FILE *fptr;
-    // fptr = fopen("output.txt","w");
-    // // Step 1: Open file
+    FILE *fptr;
+    fptr = fopen(file_name, "w+");
+    // Step 1: Open file
 
-    // while(!(*args->quit_pressed)){
+    while(!(*args->quit_pressed)){
 
-    //     // Step 2: Get input from box
-    //     struct address_vector* output = out_box->av.buffer_p[0];
-    //     // 2.1 Grab the lock
-    //     pthread_mutex_lock(&out_box->lock);
-
-    //     if (in_box->av.size == 0) {
-    //         sleep(5); 
-    //         pthread_mutex_unlock(&out_box->lock);
-    //         continue;
-    //     }
-    //     // 2.2 Pop from the box
-    //     av_pop(&out_box->av);
-    //     // 2.3 Release lock
-    //     pthread_mutex_unlock(&out_box->lock);
-    //     // 2.4 Sleep if no input, and continue
+        // Step 2: Get input from box
         
-    //     // Step 3: Write to file
-    //     fputs(output, fptr);
-    //     // Step 4: Mystery step???!!
-        
-    // }
+        // 2.1 Grab the lock
+        pthread_mutex_lock(&out_box->lock);
 
-    // // Step 4: IMPORTANT CLOSE THE FILE
-    // fclose(fptr);
+        if (out_box->av.size == 0) {
+            pthread_mutex_unlock(&out_box->lock);
+            sleep(1);
+            continue;
+        }
+        struct address_vector* output_path = av_back(&out_box->av);
+        // 2.2 Pop from the box
+        av_pop(&out_box->av);
+        // 2.3 Release lock
+        pthread_mutex_unlock(&out_box->lock);
+        // 2.4 Sleep if no input, and continue
+        
+        // Step 3: Write to file
+        if(output_path == NULL){
+            printf("The pathway does not exist between x and x, try again:\n");
+            continue;
+        }else{
+            for (int i = 0; i < output_path->size; i++){
+                struct graph_node* node = output_path->buffer_p[i];
+                char* name = node->node_id;
+                printf(" -> %s", name);
+                fprintf(fptr, " -> %s", name);
+            }
+            printf("\n");
+            fprintf(fptr, "\n");
+            av_delete(output_path);
+        }
+    }
+    // Step 4: IMPORTANT CLOSE THE FILE
+    fclose(fptr);
+    fprintf(stderr, "Output thread quitting\n");
     return NULL;
 }

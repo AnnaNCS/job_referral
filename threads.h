@@ -15,6 +15,7 @@ struct OutputThreadArgs {
     char* file_name;
     struct Box* out_box;
     bool* quit_pressed;
+   
 };
 
 void* search_thread_main(void* t_args);

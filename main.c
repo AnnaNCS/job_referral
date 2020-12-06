@@ -7,8 +7,7 @@
 #include <assert.h>
 #include <string.h>
 #include <stdlib.h>
-
-
+#include <unistd.h>
 
 int int_comparator(void* a, void* b){
 
@@ -30,7 +29,6 @@ void append_neighbors_to_names(struct address_vector input_pairs, struct address
     gn_add_neighbor(n1, n2);
     gn_add_neighbor(n2, n1);
   }
-
 }
 
 void read_user_input(struct graph_node* graph, struct address_vector unique_names){
@@ -38,6 +36,7 @@ void read_user_input(struct graph_node* graph, struct address_vector unique_name
   struct Box* in_box = create_box();
   struct Box* out_box = create_box();
   bool quit_pressed = false;
+  
 
   struct SearchThreadArgs args;
   args.graph = graph;
@@ -46,8 +45,15 @@ void read_user_input(struct graph_node* graph, struct address_vector unique_name
   args.out_box = out_box;
   args.quit_pressed = &quit_pressed;
 
+  struct OutputThreadArgs out_args;
+  out_args.file_name = "output.txt";
+  out_args.out_box = out_box;
+  out_args.quit_pressed = &quit_pressed;
+
   pthread_t search_thread;
+  pthread_t output_thread;
   pthread_create(&search_thread, NULL, search_thread_main, (void*) &args);
+  pthread_create(&output_thread, NULL, output_thread_main, (void*) &out_args);
 
   char* line = NULL;
   char* input_1 = NULL;
@@ -61,12 +67,10 @@ void read_user_input(struct graph_node* graph, struct address_vector unique_name
   int read;
   
   while(1){
-    
-    fprintf(stdout, ">");
 
     read = getline(&line, &n, stdin);
 
-    line[read-1] = 0; // NOTE: must remove new line character
+    line[read-1] = 0;
     input_1 = strtok(line, delimmeter);
     input_2 = strtok(NULL, delimmeter);
 
@@ -81,6 +85,15 @@ void read_user_input(struct graph_node* graph, struct address_vector unique_name
     }
 
     if(strcmp(input_1, quit) == 0){
+      // while(1){
+      //   if((in_box->av.size == 0) && (out_box->av.size == 0)){
+      //     break;
+      //   }
+      // }
+      //sleep(3);
+      quit_pressed = true;
+      pthread_join(search_thread, NULL);
+      pthread_join(output_thread, NULL);
       fprintf(stderr, "Thank you, the program will terminate now.\n");
       return;
     }
@@ -92,30 +105,15 @@ void read_user_input(struct graph_node* graph, struct address_vector unique_name
 
     fprintf(stdout, "Your input names were: %s and %s\n", input_1, input_2);
 
-    struct pair* input_pair = create_pair(input_1, input_2);
+    struct pair* in_pair = create_pair(input_1, input_2);
 
     pthread_mutex_lock(&in_box->lock);
-    av_append(&in_box->av, input_pair);
+    av_append(&in_box->av, in_pair);
     pthread_mutex_unlock(&in_box->lock);
-
-    struct address_vector* final_path = find_path(input_pair, graph, unique_names.size);
-
-    // you are unable to take a size of a null pointer, you can not dereference it
     
-    if(final_path == NULL){
-      printf("The pathway does not exist between %s and %s, try again:\n", input_1, input_2);
-      continue;
-    }else{
-      for (int i = 0; i < final_path->size; i++){
-        struct graph_node* node = final_path->buffer_p[i];
-        char* name = node->node_id;
-        printf(" -> %s", name);
-      }
-      printf("\n");
-      
-    }
-    av_delete(final_path); // if final path is null and try delete = crash
   }
+    // if final path is null and try delete = crash
+    
 }
 
 
@@ -200,7 +198,6 @@ int main(int argc, char** argv) {
 
   // we read user input, and call BFS search to find the path from one person to another
   read_user_input(graph, unique_names);
-
 
   return 0;
 }

@@ -85,12 +85,12 @@ void read_user_input(struct graph_node* graph, struct address_vector unique_name
     }
 
     if(strcmp(input_1, quit) == 0){
-      // while(1){
-      //   if((in_box->av.size == 0) && (out_box->av.size == 0)){
-      //     break;
-      //   }
-      // }
-      //sleep(3);
+      while(1){
+        if((in_box->av.size == 0) && (out_box->av.size == 0)){
+          break;
+        }
+        sleep(3);
+      }
       quit_pressed = true;
       pthread_join(search_thread, NULL);
       pthread_join(output_thread, NULL);

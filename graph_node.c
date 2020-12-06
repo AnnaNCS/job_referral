@@ -80,7 +80,7 @@ struct address_vector* find_path(struct pair* input_pair, struct graph_node* gra
   while(queue->size != 0){
     
     path = queue->buffer_p[0];
-    av_pop(queue);
+    av_pop_front(queue);
 
     curr_node = path->buffer_p[path->size - 1];
     //fprintf(stderr, "visiting node id %s\n", curr_node->node_id);

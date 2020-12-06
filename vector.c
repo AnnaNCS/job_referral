@@ -36,12 +36,15 @@ struct address_vector* av_copy(struct address_vector* to_copy){
   return new_av;
 }
 
-void av_pop(struct address_vector* av_p){
-
+void av_pop_front(struct address_vector* av_p){
   void** buffer_new = (void**) malloc(sizeof(void*) * av_p->buffer_size);
   memcpy(buffer_new, av_p->buffer_p + 1, (av_p->buffer_size -1) * sizeof(void*));
   free(av_p->buffer_p);
   av_p->buffer_p = buffer_new;
+  av_p->size--;
+} 
+
+void av_pop(struct address_vector* av_p){
   av_p->size--;
 } 
 

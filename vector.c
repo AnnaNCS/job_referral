@@ -81,3 +81,7 @@ void* av_search(struct address_vector* av_p, void* target_p, int (*comp)(void*,v
   }
   return NULL;
 }
+
+void* av_back(struct address_vector* av_p){
+  return av_p->buffer_p[av_p->size-1];
+}

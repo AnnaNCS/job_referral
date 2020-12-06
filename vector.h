@@ -37,4 +37,6 @@ int string_comparator(void* a, void*b);
 // Searches the pointer to the element(target_p) in the memory 
 void* av_search(struct address_vector* av_p, void* target_p, int (*comp)(void*,void*));
 
+void* av_back(struct address_vector* av_p);
+
 #endif

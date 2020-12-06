@@ -1,93 +1,14 @@
 #include "vector.h"
 #include "graph_node.h"
 #include "pair.h"
+#include "box.h"
+#include "threads.h"
 #include <stdio.h>
 #include <assert.h>
 #include <string.h>
 #include <stdlib.h>
 
-struct graph_node* find_node_by_name(struct graph_node* g, char* name, int size){
 
-    for(int i = 0; i < size; i++){
-      //printf("%d\n", i);
-      if(strcmp(g[i].node_id, name) == 0){
-        
-        return &g[i];
-      } 
-    }
-    //printf("Not found\n");
-    return NULL;
-}
-
-struct address_vector* find_path(char* name_1, char* name_2, struct graph_node* graph, int size){
-
-  //fprintf(stderr, "nperforming path search %d\n", size);
-
-  struct address_vector* final_path = NULL;
-
-  // first we want to find the node that we are going to start from 
-  struct graph_node* node_start = find_node_by_name(graph, name_1, size);
-
-  // the same comes to the node we want to finish our search with 
-  struct graph_node* node_end = find_node_by_name(graph, name_2, size);
-
-  if(node_start == NULL || node_end == NULL){
-    return final_path;
-  }
-
-  struct address_vector* visited = av_create();
-  struct address_vector* queue = av_create();
-
-  //fprintf(stderr, "node ID  start %s ; end %s\n", node_start->node_id, node_end->node_id);
-
-  // next, we want to enqueue our first node 
-  struct address_vector* path = av_create();
-
-  av_append(path, node_start);
-  av_append(queue, path);
-
-  struct graph_node* curr_node; 
-  curr_node = node_start;
-  
-  while(queue->size != 0){
-    
-    path = queue->buffer_p[0];
-    av_pop(queue);
-
-    curr_node = path->buffer_p[path->size - 1];
-    //fprintf(stderr, "visiting node id %s\n", curr_node->node_id);
-    if (curr_node == node_end){
-      final_path = path;
-      //printf("The pathway to your target is completed\n");
-      break;
-    }
-
-    av_append(visited, curr_node);
-
-    for(int i = 0; i < curr_node->neighbors.size; i++){
-      struct graph_node* neighbor = curr_node->neighbors.buffer_p[i];
-      if(av_search(visited, neighbor, gn_comparator) == NULL){
-        struct address_vector* path_to_neighbor = av_copy(path);
-        av_append(path_to_neighbor, neighbor);
-        av_append(queue, path_to_neighbor);
-      }
-    
-    }
-    // to prevent leak memory, as we have created and poped it earlier 
-    av_delete(path);
-
-  }
-  // clean up code before deleting the queue
-  for (int i = 0; i < queue->size; i++){
-    av_delete(queue->buffer_p[i]);
-  }
-
-  av_delete(queue);
-  av_delete(visited);
-
-
-  return final_path;
-}
 
 int int_comparator(void* a, void* b){
 
@@ -113,12 +34,25 @@ void append_neighbors_to_names(struct address_vector input_pairs, struct address
 }
 
 void read_user_input(struct graph_node* graph, struct address_vector unique_names){
-  
+
+  struct Box* in_box = create_box();
+  struct Box* out_box = create_box();
+  bool quit_pressed = false;
+
+  struct SearchThreadArgs args;
+  args.graph = graph;
+  args.graph_size = unique_names.size;
+  args.in_box = in_box;
+  args.out_box = out_box;
+  args.quit_pressed = &quit_pressed;
+
+  pthread_t search_thread;
+  pthread_create(&search_thread, NULL, search_thread_main, (void*) &args);
 
   char* line = NULL;
   char* input_1 = NULL;
   char* input_2 = NULL;
-  char* quit = "quit";
+  const char* quit = "quit";
     
   fprintf(stdout, "Input two names:\n");
   size_t n = 0;
@@ -136,8 +70,6 @@ void read_user_input(struct graph_node* graph, struct address_vector unique_name
     input_1 = strtok(line, delimmeter);
     input_2 = strtok(NULL, delimmeter);
 
-    
-
     if(input_1 == NULL){
       fprintf(stdout, "Your input was not complete, try again:\n");
       continue;
@@ -149,7 +81,7 @@ void read_user_input(struct graph_node* graph, struct address_vector unique_name
     }
 
     if(strcmp(input_1, quit) == 0){
-      fprintf(stdout, "Thank you, the program will terminate now.\n");
+      fprintf(stderr, "Thank you, the program will terminate now.\n");
       return;
     }
 
@@ -159,13 +91,19 @@ void read_user_input(struct graph_node* graph, struct address_vector unique_name
     }
 
     fprintf(stdout, "Your input names were: %s and %s\n", input_1, input_2);
-      
-    struct address_vector* final_path = find_path(input_1, input_2, graph, unique_names.size);
+
+    struct pair* input_pair = create_pair(input_1, input_2);
+
+    pthread_mutex_lock(&in_box->lock);
+    av_append(&in_box->av, input_pair);
+    pthread_mutex_unlock(&in_box->lock);
+
+    struct address_vector* final_path = find_path(input_pair, graph, unique_names.size);
 
     // you are unable to take a size of a null pointer, you can not dereference it
     
     if(final_path == NULL){
-      printf("The pathway does not exist, try again:\n");
+      printf("The pathway does not exist between %s and %s, try again:\n", input_1, input_2);
       continue;
     }else{
       for (int i = 0; i < final_path->size; i++){
@@ -262,6 +200,7 @@ int main(int argc, char** argv) {
 
   // we read user input, and call BFS search to find the path from one person to another
   read_user_input(graph, unique_names);
+
 
   return 0;
 }

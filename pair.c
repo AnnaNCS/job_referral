@@ -15,7 +15,7 @@ struct pair* create_pair(char* name_1, char* name_2){
     p->name_1 = name_one;
     p->name_2 = name_two;
     return p;
-    //(*p).name_1 = name_one;
+
 }
 
 
@@ -35,9 +35,7 @@ void file_to_vector_pairs(FILE *fp, struct address_vector* my_pairs){
         name_2 = strtok(NULL, delimmeter);
         struct pair* p = create_pair(name_1, name_2);
         av_append(my_pairs, p);
-        //printf("Readig names: %s:%lu %s:%lu\n", name_1, strlen(name_1), name_2, strlen(name_2));
 
-        //*(line + (read -1))
     }
 
     if(line != NULL){
@@ -58,4 +56,12 @@ void find_unique_names(struct address_vector* input_pairs, struct address_vector
             av_append(unique_names, curr_pair->name_2);
         }
     }
+
+}
+
+void delete_pair(struct pair* pair){
+    free(pair->name_1);
+    free(pair->name_2);
+    free(pair);
+    //only for a heap allocated pair
 }

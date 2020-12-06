@@ -16,4 +16,6 @@ struct pair* create_pair(char* name_1, char* name_2);
 
 void find_unique_names(struct address_vector* my_pairs, struct address_vector* unique_names);
 
+void delete_pair(struct pair* pair);
+
 #endif

@@ -8,6 +8,8 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <time.h>
+
 
 #define NUM_THREADS 5
 
@@ -180,7 +182,7 @@ int main(int argc, char** argv) {
   struct address_vector input_pairs;
   av_init(&input_pairs);
 
-  FILE* fp = fopen("file.txt", "r");
+  FILE* fp = fopen("friends.txt", "r");
 
   // we read a file// 
   file_to_vector_pairs(fp, &input_pairs);
@@ -206,7 +208,13 @@ int main(int argc, char** argv) {
   append_neighbors_to_names(input_pairs, unique_names, graph);
 
   // we read user input, and call BFS search to find the path from one person to another
+  clock_t start, end;
+  double cpu_time_used;
+  start = clock();
   read_user_input(graph, unique_names);
+  end = clock();
+  cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
+  printf("the runtime is %f\n", cpu_time_used);
 
   return 0;
 }

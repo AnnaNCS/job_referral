@@ -1,16 +1,16 @@
+ -> Misha -> Sasha
+ -> Anna -> Sasha
+ -> Misha -> Sasha
  -> Anna -> Sasha -> Misha
  -> Anton -> Anna
  -> Misha -> Sasha
- -> Anna -> Sasha
- -> Anna -> Sasha -> Misha
- -> Anton -> Anna
  -> Misha -> Sasha
  -> Anna -> Sasha
+ -> Anton -> Anna
+ -> Anna -> Sasha -> Misha
  -> Anna -> Sasha -> Misha
  -> Anton -> Anna
- -> Misha -> Sasha
- -> Anna -> Sasha
  -> Anna -> Sasha -> Misha
+ -> Anna -> Sasha
  -> Anton -> Anna
  -> Anna -> Sasha
- -> Misha -> Sasha

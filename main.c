@@ -9,6 +9,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#define NUM_THREADS 5
+
 int int_comparator(void* a, void* b){
 
   int first = *((int*) a); // gives me the value pointed to by a, &gives me the address of the value pointed by a
@@ -50,9 +52,13 @@ void read_user_input(struct graph_node* graph, struct address_vector unique_name
   out_args.out_box = out_box;
   out_args.quit_pressed = &quit_pressed;
 
-  pthread_t search_thread;
+  pthread_t search_threads[NUM_THREADS];
+  for (int i = 0; i < NUM_THREADS; i++){
+    pthread_create(&search_threads[i], NULL, search_thread_main, (void*) &args);
+  }
+
   pthread_t output_thread;
-  pthread_create(&search_thread, NULL, search_thread_main, (void*) &args);
+  
   pthread_create(&output_thread, NULL, output_thread_main, (void*) &out_args);
 
   char* line = NULL;
@@ -92,7 +98,10 @@ void read_user_input(struct graph_node* graph, struct address_vector unique_name
         sleep(3);
       }
       quit_pressed = true;
-      pthread_join(search_thread, NULL);
+      for(int i = 0; i < NUM_THREADS; i++){
+          pthread_join(search_threads[i], NULL);
+      }
+      
       pthread_join(output_thread, NULL);
       fprintf(stderr, "Thank you, the program will terminate now.\n");
       return;
